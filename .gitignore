@@ -1,0 +1,9 @@
+dist/
+*.exe
+/replado-connector
+/rc
+connector.json
+protokoll.jsonl*
+status.json
+*.log
+.DS_Store
