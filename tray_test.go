@@ -60,3 +60,17 @@ func TestIconImagePicksTheMatchingSize(t *testing.T) {
 		t.Fatal("kaputte Datei darf nichts liefern")
 	}
 }
+
+func TestOpeningTheSetupRefreshesTheServiceOnlyWhenSignedIn(t *testing.T) {
+	calls := 0
+	install := func() error { calls++; return nil }
+	refreshService(&Config{}, install)
+	refreshService(nil, install)
+	refreshService(&Config{Secret: "s"}, nil)
+	if calls != 0 {
+		t.Fatalf("ohne Anmeldung darf nichts installiert werden, %d Aufrufe", calls)
+	}
+	if err := refreshService(&Config{Secret: "s"}, install); err != nil || calls != 1 {
+		t.Fatalf("angemeldet muss der Dienst erneuert werden, %d Aufrufe", calls)
+	}
+}

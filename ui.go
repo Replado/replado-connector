@@ -270,12 +270,22 @@ func listDirs(p string) (interface{}, error) {
 	return map[string]interface{}{"path": clean, "parent": parent, "dirs": out}, nil
 }
 
+func refreshService(c *Config, install func() error) error {
+	if install == nil || c == nil || c.Secret == "" {
+		return nil
+	}
+	return install()
+}
+
 func runUI(open bool, install func() error) error {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return err
 	}
 	u := &uiServer{token: newToken(), origin: "http://" + ln.Addr().String(), client: httpClient(60 * time.Second), install: install}
+	if err := refreshService(loadConfig(), install); err != nil {
+		fmt.Println("Hintergrunddienst: " + err.Error())
+	}
 	u.touch()
 	srv := &http.Server{Handler: u, ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 90 * time.Second}
 	address := u.origin + "/#" + u.token
