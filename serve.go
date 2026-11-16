@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -155,7 +156,14 @@ type apiError struct {
 
 func (e *apiError) Error() string { return e.msg }
 
-func serverMessage(body []byte) string {
+const (
+	maxStartRetries = 12
+	maxStartWait    = 10 * time.Second
+)
+
+var startWait = time.Sleep
+
+func serverMessage(status int, body []byte) string {
 	var r struct {
 		Detail interface{} `json:"detail"`
 	}
@@ -164,11 +172,22 @@ func serverMessage(body []byte) string {
 			return s
 		}
 	}
-	text := strings.TrimSpace(string(body))
-	if len(text) > 200 {
-		text = text[:200]
+	return "Unter dieser Adresse antwortet kein Replado (Status " + strconv.Itoa(status) + "). Bitte die Adresse prüfen."
+}
+
+func retryAfter(resp *http.Response) (time.Duration, bool) {
+	if resp.StatusCode != http.StatusServiceUnavailable {
+		return 0, false
 	}
-	return text
+	seconds, err := strconv.Atoi(strings.TrimSpace(resp.Header.Get("Retry-After")))
+	if err != nil || seconds < 1 {
+		return 0, false
+	}
+	wait := time.Duration(seconds) * time.Second
+	if wait > maxStartWait {
+		wait = maxStartWait
+	}
+	return wait, true
 }
 
 func post(cl *http.Client, endpoint, secret string, body, out interface{}) error {
@@ -176,9 +195,39 @@ func post(cl *http.Client, endpoint, secret string, body, out interface{}) error
 	if err != nil {
 		return err
 	}
+	for attempt := 0; ; attempt++ {
+		status, wait, rb, err := send(cl, endpoint, secret, b)
+		if err != nil {
+			return err
+		}
+		if wait > 0 && attempt < maxStartRetries {
+			startWait(wait)
+			continue
+		}
+		if status == 204 {
+			return nil
+		}
+		if status/100 != 2 {
+			return &apiError{status: status, code: rb.code, msg: serverMessage(status, rb.body)}
+		}
+		if out != nil && len(rb.body) > 0 {
+			if json.Unmarshal(rb.body, out) != nil {
+				return errf("Unter dieser Adresse antwortet kein Replado. Bitte die Adresse prüfen.")
+			}
+		}
+		return nil
+	}
+}
+
+type reply struct {
+	body []byte
+	code string
+}
+
+func send(cl *http.Client, endpoint, secret string, b []byte) (int, time.Duration, reply, error) {
 	req, err := http.NewRequest("POST", endpoint, bytes.NewReader(b))
 	if err != nil {
-		return err
+		return 0, 0, reply{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Language", "de")
@@ -188,30 +237,18 @@ func post(cl *http.Client, endpoint, secret string, body, out interface{}) error
 	}
 	resp, err := cl.Do(req)
 	if err != nil {
-		return err
+		return 0, 0, reply{}, err
 	}
 	defer resp.Body.Close()
 	rb, err := ioutil.ReadAll(io.LimitReader(resp.Body, maxResponse+1))
 	if err != nil {
-		return err
+		return 0, 0, reply{}, err
 	}
 	if len(rb) > maxResponse {
-		return errf("Die Antwort des Servers ist zu groß")
+		return 0, 0, reply{}, errf("Die Antwort des Servers ist zu groß")
 	}
-	if resp.StatusCode == 204 {
-		return nil
-	}
-	if resp.StatusCode/100 != 2 {
-		msg := serverMessage(rb)
-		if msg == "" {
-			msg = resp.Status
-		}
-		return &apiError{status: resp.StatusCode, code: resp.Header.Get("X-Replado-Code"), msg: msg}
-	}
-	if out != nil && len(rb) > 0 {
-		return json.Unmarshal(rb, out)
-	}
-	return nil
+	wait, _ := retryAfter(resp)
+	return resp.StatusCode, wait, reply{body: rb, code: resp.Header.Get("X-Replado-Code")}, nil
 }
 
 var errSecondFactor = errf("Bitte den Code aus Ihrer Authenticator-App eingeben.")

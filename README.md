@@ -20,6 +20,10 @@ einzelne Fragen und liest dabei nur.
 
 ## Einrichtung
 
+**Wohin?** Auf den Rechner, auf dem die Daten der Software liegen, und am besten auf einen, der immer läuft:
+einen Server, ein NAS mit Linux oder den Büro-PC mit dem Datenordner. Ist der Connector aus, wartet Replado mit der
+Frage und holt sie automatisch nach, sobald er wieder läuft. Auf den einzelnen Arbeitsplätzen wird er nicht gebraucht.
+
 1. Die passende Datei aus den [Releases](../../releases/latest) laden:
 
    | Datei | System |
@@ -43,6 +47,10 @@ Nach der Anmeldung richtet sich der Connector als Hintergrunddienst des Benutzer
 | Windows | `%LOCALAPPDATA%\Replado` | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` |
 | macOS | `~/Library/Application Support/Replado` | LaunchAgent `com.replado.connector` |
 | Linux | `~/.config/replado-connector` | systemd-Benutzerdienst, sonst XDG-Autostart |
+
+Unter Windows zeigt ein Symbol neben der Uhr, ob der Connector mit Replado verbunden ist (farbig) oder nicht (grau).
+Ein Klick öffnet die Einrichtung, ein Rechtsklick zeigt den Zustand und „Connector beenden“. Die Einrichtung ist außerdem
+im Startmenü unter „Replado Connector“ zu finden.
 
 ### Ohne Bildschirm (Linux-Server)
 

@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const version = "0.2.1"
+const version = "0.3.0"
 
 const usage = `Replado Connector ` + version + `
 
@@ -99,6 +99,7 @@ func runCommand(args []string, out io.Writer, in io.Reader) error {
 			return nil
 		}
 		setupLog()
+		startTray()
 		runServe()
 		return nil
 	case "login":
@@ -265,6 +266,7 @@ func ensureInstalled() error {
 	if err := setAutostart(target); err != nil {
 		return errf("Autostart: %v", err)
 	}
+	installShortcut(target)
 	if startsItself() {
 		return nil
 	}
@@ -277,6 +279,7 @@ func ensureInstalled() error {
 func uninstall() error {
 	stopRunning()
 	removeAutostart()
+	removeShortcut()
 	os.Remove(configPath())
 	scheduleRemoveDir(appDir())
 	return nil
