@@ -8,3 +8,5 @@ func startTray() {}
 func installShortcut(exe string) {}
 
 func removeShortcut() {}
+
+func trayRemove() {}

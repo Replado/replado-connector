@@ -87,10 +87,25 @@ Replado speichert den Zugang nur als Hash.
 | `/api/connector/v1/login` | `email`, `password`, `code?`, `machine`, `os`, `arch`, `version`, `tools` | `connector_id`, `secret`, `known` |
 | `/api/connector/v1/poll` | `version`, `os`, `sources?`, `folders?` | nach höchstens 25 s: `calls`, `rescan?`, `known?` |
 | `/api/connector/v1/result` | `id`, `result` oder `error` | 204 |
+| `/api/connector/v1/update` | `version`, `target` | `allowed` |
 | `/api/connector/v1/logout` | | 204 |
 
 `sources` und `folders` kommen nur mit, wenn sich etwas geändert hat. 401 bei `poll` heißt: Der Connector wurde in
 Replado entfernt. `known` enthält Beschreibungen bekannter Software, damit die KI die Tabellen versteht.
+
+## Updates
+
+Der installierte Connector sucht drei Minuten nach dem Start und danach alle sechs Stunden nach einer neuen Version:
+
+1. Er lädt `update.json` und `update.json.sig` aus dem neuesten Release auf GitHub. Weiterleitungen sind nur zu
+   `github.com` und `*.githubusercontent.com` erlaubt.
+2. Er prüft die Signatur (ECDSA P-256 mit SHA-256) gegen den öffentlichen Schlüssel in `updater.go`. Ohne gültige
+   Signatur passiert nichts. Den privaten Schlüssel hat nur der Herausgeber.
+3. Ist die Version neuer, fragt er Replado (`/api/connector/v1/update`). Der Admin kann automatische Updates je PC
+   unter Datenquellen abschalten. Replado vermerkt jedes Update im Audit-Log.
+4. Er lädt die passende Datei, vergleicht ihre SHA-256-Prüfsumme mit `update.json`, startet die neue Datei probeweise
+   mit `version` und tauscht sie erst dann aus. Die vorige Version bleibt als `.alt` liegen.
+5. Er startet neu und vermerkt das Update in seinem Protokoll.
 
 ## Entwicklung
 
@@ -101,7 +116,10 @@ Funktionen neuer als Go 1.10 bitte nicht verwenden.
 make test        # go vet und Tests mit Race-Prüfung
 make test-alt    # dieselben Tests mit Go 1.10 und Go 1.20 in Docker
 make all         # Tests und alle Pakete nach dist/
+make release     # wie all, dazu update.json und Signatur (Schlüssel in ~/.replado/connector-update-key.pem)
 ```
+
+Zu einem Release gehören alle Dateien aus `dist/`, auch `update.json` und `update.json.sig`.
 
 Zum Ausprobieren ohne Replado:
 

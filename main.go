@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const version = "0.3.1"
+const version = "0.4.0"
 
 const usage = `Replado Connector ` + version + `
 
@@ -95,12 +95,20 @@ func runCommand(args []string, out io.Writer, in io.Reader) error {
 		}
 		return runUI(!hasFlag(rest, "--ohne-browser"), install)
 	case "serve":
-		if !singleInstance() {
+		running := singleInstance()
+		if !running && hasFlag(rest, "--nach-update") {
+			running = waitForInstance()
+		}
+		if !running {
 			return nil
 		}
 		setupLog()
 		startTray()
+		go updateLoop()
 		runServe()
+		return nil
+	case "version":
+		fmt.Fprintln(out, version)
 		return nil
 	case "login":
 		password := os.Getenv("REPLADO_PASSWORD")

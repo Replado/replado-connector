@@ -100,6 +100,7 @@ func singleInstance() bool {
 		return true
 	}
 	if e, ok := err.(syscall.Errno); ok && e == 183 {
+		syscall.CloseHandle(syscall.Handle(h))
 		return false
 	}
 	return true
@@ -160,4 +161,15 @@ func scheduleRemoveDir(dir string) {
 	c := exec.Command("cmd", "/C", "ping 127.0.0.1 -n 3 > nul & rmdir /S /Q \""+dir+"\"")
 	hideWindow(c)
 	c.Start()
+}
+
+func restartAfterUpdate(exe string) {
+	c := exec.Command(exe, "serve", "--nach-update")
+	c.Dir = filepath.Dir(exe)
+	hideWindow(c)
+	if err := c.Start(); err != nil {
+		return
+	}
+	trayRemove()
+	os.Exit(0)
 }

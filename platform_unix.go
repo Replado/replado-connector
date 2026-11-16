@@ -210,3 +210,15 @@ func startsItself() bool {
 }
 
 func scheduleRemoveDir(dir string) { os.RemoveAll(dir) }
+
+func restartAfterUpdate(exe string) {
+	if runtime.GOOS == "darwin" || os.Getenv("INVOCATION_ID") != "" {
+		os.Exit(3)
+	}
+	c := exec.Command(exe, "serve", "--nach-update")
+	c.Dir = filepath.Dir(exe)
+	if err := c.Start(); err != nil {
+		return
+	}
+	os.Exit(0)
+}

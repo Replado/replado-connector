@@ -331,3 +331,9 @@ func removeShortcut() {
 		os.Remove(link)
 	}
 }
+
+func trayRemove() {
+	if trayAdded {
+		procShellNotifyIcon.Call(nimDelete, uintptr(unsafe.Pointer(trayData(trayLast))))
+	}
+}
