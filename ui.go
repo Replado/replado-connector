@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -60,6 +61,7 @@ func securityHeaders(w http.ResponseWriter) {
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Referrer-Policy", "no-referrer")
 	h.Set("Cache-Control", "no-store")
+	h.Set("X-UA-Compatible", "IE=edge")
 }
 
 func (u *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -277,6 +279,9 @@ func runUI(open bool, install func() error) error {
 	u.touch()
 	srv := &http.Server{Handler: u, ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 90 * time.Second}
 	address := u.origin + "/#" + u.token
+	if runtime.GOOS == "windows" {
+		address = u.origin + "/?t=" + u.token
+	}
 	go func() {
 		for range time.Tick(30 * time.Second) {
 			if u.idle() {

@@ -4,10 +4,10 @@ const uiHTML = `<!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Replado Connector</title>
 <link rel="stylesheet" href="/app.css">
-<script src="/app.js" defer></script>
 </head>
 <body>
 <header>
@@ -77,81 +77,84 @@ const uiHTML = `<!doctype html>
     <button type="button" id="reload-log" class="secondary">Protokoll aktualisieren</button>
   </section>
 </main>
+<script src="/app.js"></script>
 </body>
 </html>
 `
 
-const uiCSS = `:root {
-  --bg: #f4f4f1;
-  --card: #ffffff;
-  --text: #1d231f;
-  --muted: #5d665f;
-  --border: #dfe3dc;
-  --accent: #1f5c46;
-  --accent-text: #ffffff;
-  --danger: #a3271f;
-  --danger-bg: #fbeceb;
-  color-scheme: light dark;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #141815;
-    --card: #1d221e;
-    --text: #e9ece8;
-    --muted: #a5ada6;
-    --border: #2f3630;
-    --accent: #5fb38f;
-    --accent-text: #0e1a14;
-    --danger: #f19189;
-    --danger-bg: #3a1f1d;
-  }
-}
-* { box-sizing: border-box; }
+const uiCSS = `* { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header, main, section, nav, footer { display: block; }
+body { margin: 0; background: #f4f4f1; color: #1d231f; font: 17px/1.5 "Segoe UI", system-ui, -apple-system, Tahoma, sans-serif; }
 header, main { max-width: 860px; margin: 0 auto; padding: 0 16px; }
 header { padding-top: 24px; }
-h1 { font-size: 1.6rem; margin: 0; }
-h2 { font-size: 1.2rem; margin: 0 0 8px; }
-h3 { font-size: 1rem; margin: 16px 0 8px; }
-.muted { color: var(--muted); }
-.mono { font-family: ui-monospace, Consolas, monospace; word-break: break-all; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 16px 0; }
-label { display: block; margin: 10px 0; font-weight: 600; }
-label input { display: block; width: 100%; margin-top: 4px; font-weight: 400; }
-input { font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
-button { font: inherit; font-weight: 600; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-text); cursor: pointer; }
-button.secondary { background: transparent; color: var(--text); border-color: var(--border); }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.row input { flex: 1 1 260px; }
+h1 { font-size: 1.6em; margin: 0; }
+h2 { font-size: 1.2em; margin: 0 0 8px; }
+h3 { font-size: 1em; margin: 16px 0 8px; }
+.muted { color: #5d665f; }
+.mono { font-family: Consolas, "Courier New", monospace; word-wrap: break-word; word-break: break-all; }
+.card { background: #ffffff; border: 1px solid #dfe3dc; border-radius: 12px; padding: 20px; margin: 16px 0; }
+label { display: block; margin: 10px 0; font-weight: bold; }
+label input { display: block; width: 100%; margin-top: 4px; font-weight: normal; }
+input { font: inherit; padding: 10px 12px; border: 1px solid #c9cec6; border-radius: 8px; background: #fbfbf9; color: #1d231f; }
+button { font: inherit; font-weight: bold; padding: 10px 18px; margin: 4px 8px 4px 0; border-radius: 8px; border: 1px solid #1f5c46; background: #1f5c46; color: #ffffff; cursor: pointer; }
+button.secondary { background: #ffffff; color: #1d231f; border-color: #c9cec6; }
+button[disabled] { opacity: 0.5; cursor: default; }
+.row input { width: 100%; margin-bottom: 6px; }
 .list { list-style: none; padding: 0; margin: 0; }
-.list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.list li { padding: 10px 0; border-bottom: 1px solid #dfe3dc; overflow: hidden; }
 .list li:last-child { border-bottom: 0; }
-.browser, .preview { margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.list li > button { float: right; margin: 0 0 0 12px; }
+.browser, .preview { margin-top: 12px; padding: 12px; border: 1px solid #dfe3dc; border-radius: 10px; }
 .browser .list { max-height: 320px; overflow: auto; }
-.browser .list button { width: 100%; text-align: left; }
-.confirm { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; background: var(--bg); padding: 12px; border-radius: 8px; }
-.confirm input { width: 22px; height: 22px; margin: 2px 0 0; flex: none; }
-.alert { background: var(--danger-bg); color: var(--danger); padding: 12px 16px; border-radius: 8px; margin-top: 16px; }
-.ok { color: var(--accent); font-weight: 600; }
+.browser .list button { width: 100%; text-align: left; float: none; margin: 0; }
+.confirm { font-weight: normal; background: #f4f4f1; padding: 12px 12px 12px 44px; border-radius: 8px; position: relative; }
+.confirm input { position: absolute; left: 12px; top: 14px; width: 22px; height: 22px; margin: 0; }
+.alert { background: #fbeceb; color: #a3271f; padding: 12px 16px; border-radius: 8px; margin-top: 16px; }
+.ok { color: #1f5c46; font-weight: bold; }
 .table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #dfe3dc; vertical-align: top; }
+@media (prefers-color-scheme: dark) {
+  body { background: #141815; color: #e9ece8; }
+  .muted { color: #a5ada6; }
+  .card { background: #1d221e; border-color: #2f3630; }
+  input { background: #141815; color: #e9ece8; border-color: #3a423b; }
+  button { background: #5fb38f; border-color: #5fb38f; color: #0e1a14; }
+  button.secondary { background: transparent; color: #e9ece8; border-color: #3a423b; }
+  .list li, th, td { border-color: #2f3630; }
+  .browser, .preview { border-color: #2f3630; }
+  .confirm { background: #141815; }
+  .alert { background: #3a1f1d; color: #f19189; }
+  .ok { color: #5fb38f; }
+}
 `
 
 const uiJS = `(function () {
   'use strict';
   var token = '';
-  try { token = sessionStorage.getItem('replado-token') || ''; } catch (e) {}
-  if (location.hash.length > 1) {
-    token = location.hash.slice(1);
-    try { sessionStorage.setItem('replado-token', token); } catch (e) {}
-    history.replaceState(null, '', '/');
+  try { token = window.sessionStorage.getItem('replado-token') || ''; } catch (e) {}
+  var fromQuery = /[?&]t=([A-Za-z0-9_-]+)/.exec(location.search);
+  if (fromQuery) {
+    token = fromQuery[1];
+    try { window.sessionStorage.setItem('replado-token', token); } catch (e) {}
+    if (window.history && window.history.replaceState) window.history.replaceState(null, '', '/');
+  } else if (location.hash.length > 1) {
+    token = location.hash.substring(1);
+    try { window.sessionStorage.setItem('replado-token', token); } catch (e) {}
+    if (window.history && window.history.replaceState) window.history.replaceState(null, '', '/');
   }
   var $ = function (id) { return document.getElementById(id); };
   var state = null;
   var browsing = '';
+
+  function show(node, visible) {
+    if (visible) node.removeAttribute('hidden'); else node.setAttribute('hidden', 'hidden');
+  }
+
+  function disable(node, off) {
+    node.disabled = !!off;
+  }
 
   function el(tag, text, cls) {
     var node = document.createElement(tag);
@@ -162,39 +165,40 @@ const uiJS = `(function () {
 
   function showError(message) {
     $('error').textContent = message || '';
-    $('error').hidden = !message;
+    show($('error'), !!message);
   }
 
-  function api(action, data) {
-    return fetch('/api/' + action, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Replado-Token': token },
-      body: JSON.stringify(data || {})
-    }).then(function (response) {
-      return response.text().then(function (text) {
-        var body = {};
-        try { body = text ? JSON.parse(text) : {}; } catch (e) { body = { error: text }; }
-        if (!response.ok) {
-          if (response.status === 401) throw new Error('Diese Seite ist abgelaufen. Bitte den Replado Connector neu öffnen.');
-          throw new Error(body.error || 'Unbekannter Fehler');
-        }
-        return body;
-      });
-    });
+  function api(action, data, done, failed) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/' + action, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-Replado-Token', token);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+      var body = {};
+      try { body = xhr.responseText ? JSON.parse(xhr.responseText) : {}; } catch (e) { body = { error: xhr.responseText }; }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (done) done(body);
+        return;
+      }
+      var message = xhr.status === 401 ? 'Diese Seite ist abgelaufen. Bitte den Replado Connector neu öffnen.' : (xhr.status === 0 ? 'Der Replado Connector ist nicht mehr geöffnet. Bitte neu starten.' : (body.error || 'Unbekannter Fehler'));
+      if (failed) failed(message); else showError(message);
+    };
+    xhr.send(JSON.stringify(data || {}));
   }
 
   function when(value) {
     if (!value) return '';
-    var d = new Date(value);
-    if (isNaN(d.getTime())) return value;
-    return d.toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value);
+    if (!m) return value;
+    return m[3] + '.' + m[2] + '.' + m[1] + ', ' + m[4] + ':' + m[5];
   }
 
   function render(s) {
     state = s;
     $('about').textContent = 'Version ' + s.version + ' · ' + s.os;
-    $('connected').hidden = !s.connected;
-    $('login').hidden = s.connected;
+    show($('connected'), s.connected);
+    show($('login'), !s.connected);
     if (s.connected) {
       $('connected-text').textContent = 'Verbunden mit ' + s.server + ' als ' + s.account + '.';
       var st = s.status || {};
@@ -221,13 +225,11 @@ const uiJS = `(function () {
       item.appendChild(text);
       var remove = el('button', 'Entfernen', 'secondary');
       remove.type = 'button';
-      remove.addEventListener('click', function () {
-        run(api('remove-folder', { path: f.path }));
-      });
+      remove.onclick = function () { run('remove-folder', { path: f.path }); };
       item.appendChild(remove);
       list.appendChild(item);
     });
-    $('no-folders').hidden = (s.folders || []).length > 0;
+    show($('no-folders'), !(s.folders || []).length);
     var status = s.status || {};
     $('scan-text').textContent = status.scanned_at
       ? 'Zuletzt eingelesen: ' + when(status.scanned_at) + ' · ' + (status.sources === 1 ? '1 Datenbank gefunden.' : status.sources + ' Datenbanken gefunden.')
@@ -235,13 +237,16 @@ const uiJS = `(function () {
     $('confirm-text').textContent = s.confirmation;
   }
 
-  function run(promise) {
+  function run(action, data, after) {
     showError('');
-    return promise.then(function (s) { if (s && s.version) { render(s); loadLog(); } return s; }).catch(function (e) { showError(e.message); });
+    api(action, data, function (s) {
+      if (s && s.version) { render(s); loadLog(); }
+      if (after) after(s);
+    });
   }
 
   function loadLog() {
-    return api('log').then(function (entries) {
+    api('log', {}, function (entries) {
       var body = $('log');
       body.textContent = '';
       entries.forEach(function (e) {
@@ -254,38 +259,38 @@ const uiJS = `(function () {
         row.appendChild(el('td', e.error || ''));
         body.appendChild(row);
       });
-      $('no-log').hidden = entries.length > 0;
-    }).catch(function (e) { showError(e.message); });
+      show($('no-log'), !entries.length);
+    }, function () {});
   }
 
   function browse(path) {
-    api('dirs', { path: path }).then(function (r) {
+    api('dirs', { path: path }, function (r) {
       browsing = r.path;
-      $('browser').hidden = false;
+      show($('browser'), true);
       $('browser-path').textContent = r.path || 'Laufwerke und Speicherorte';
-      $('browser-up').disabled = !r.path;
-      $('browser-pick').disabled = !r.path;
+      disable($('browser-up'), !r.path);
+      disable($('browser-pick'), !r.path);
       var list = $('browser-list');
       list.textContent = '';
       (r.dirs || []).forEach(function (d) {
         var item = el('li');
         var open = el('button', d.name, 'secondary');
         open.type = 'button';
-        open.addEventListener('click', function () { browse(d.path); });
+        open.onclick = function () { browse(d.path); };
         item.appendChild(open);
         list.appendChild(item);
       });
       if (!(r.dirs || []).length) list.appendChild(el('li', 'Keine Unterordner.', 'muted'));
       $('browser-up').onclick = function () { browse(r.parent || ''); };
-    }).catch(function (e) { showError(e.message); });
+    });
   }
 
   function preview() {
     showError('');
-    $('preview').hidden = true;
+    show($('preview'), false);
     $('confirm').checked = false;
-    $('add').disabled = true;
-    api('preview', { path: $('path').value }).then(function (r) {
+    disable($('add'), true);
+    api('preview', { path: $('path').value }, function (r) {
       $('path').value = r.path;
       $('preview-path').textContent = r.path;
       var list = $('preview-list');
@@ -295,65 +300,75 @@ const uiJS = `(function () {
         var text = el('div');
         text.appendChild(el('strong', s.software || 'Unbekannte Software'));
         text.appendChild(el('div', s.path, 'mono'));
-        var rows = s.tables.reduce(function (sum, t) { return sum + t.rows; }, 0);
-        text.appendChild(el('div', s.tables.length + ' Tabellen, ' + rows.toLocaleString('de-DE') + ' Zeilen', 'muted'));
+        var rows = 0;
+        for (var i = 0; i < s.tables.length; i++) rows += s.tables[i].rows;
+        text.appendChild(el('div', s.tables.length + ' Tabellen, ' + rows + ' Zeilen', 'muted'));
         item.appendChild(text);
         list.appendChild(item);
       });
-      $('preview-empty').hidden = r.sources.length > 0;
+      show($('preview-empty'), !r.sources.length);
       $('confirm-text').textContent = r.confirmation;
-      $('preview').hidden = false;
-    }).catch(function (e) { showError(e.message); });
+      show($('preview'), true);
+    });
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function start() {
     if (!token) {
       showError('Diese Seite ist abgelaufen. Bitte den Replado Connector neu öffnen.');
       return;
     }
-    $('login').addEventListener('submit', function (event) {
-      event.preventDefault();
-      $('login-button').disabled = true;
+    $('login').onsubmit = function (event) {
+      if (event && event.preventDefault) event.preventDefault();
+      disable($('login-button'), true);
       showError('');
-      api('login', { server: $('server').value, email: $('email').value, password: $('password').value, code: $('code').value })
-        .then(function (r) {
-          if (r.second_factor) {
-            $('code-label').hidden = false;
-            $('code').focus();
-            showError(r.message);
-            return;
-          }
-          $('password').value = '';
-          $('code').value = '';
-          render(r);
-        })
-        .catch(function (e) { showError(e.message); })
-        .then(function () { $('login-button').disabled = false; });
-    });
-    $('logout').addEventListener('click', function () { run(api('logout')); });
-    $('browse').addEventListener('click', function () { browse($('path').value); });
-    $('browser-pick').addEventListener('click', function () {
+      api('login', { server: $('server').value, email: $('email').value, password: $('password').value, code: $('code').value }, function (r) {
+        disable($('login-button'), false);
+        if (r.second_factor) {
+          show($('code-label'), true);
+          $('code').focus();
+          showError(r.message);
+          return;
+        }
+        $('password').value = '';
+        $('code').value = '';
+        render(r);
+        loadLog();
+      }, function (message) {
+        disable($('login-button'), false);
+        showError(message);
+      });
+      return false;
+    };
+    $('logout').onclick = function () { run('logout'); };
+    $('browse').onclick = function () { browse($('path').value); };
+    $('browser-pick').onclick = function () {
       $('path').value = browsing;
-      $('browser').hidden = true;
+      show($('browser'), false);
       preview();
-    });
-    $('check').addEventListener('click', preview);
-    $('confirm').addEventListener('change', function () { $('add').disabled = !$('confirm').checked; });
-    $('add').addEventListener('click', function () {
-      run(api('add-folder', { path: $('path').value, confirmed: $('confirm').checked })).then(function (s) {
+    };
+    $('check').onclick = preview;
+    $('confirm').onclick = function () { disable($('add'), !$('confirm').checked); };
+    $('add').onclick = function () {
+      run('add-folder', { path: $('path').value, confirmed: $('confirm').checked }, function (s) {
         if (s && s.version) {
-          $('preview').hidden = true;
+          show($('preview'), false);
           $('path').value = '';
         }
       });
-    });
-    $('rescan').addEventListener('click', function () {
-      run(api('rescan')).then(function () { $('scan-text').textContent = 'Wird neu eingelesen …'; });
-    });
-    $('reload-log').addEventListener('click', loadLog);
-    run(api('state'));
+    };
+    $('rescan').onclick = function () {
+      run('rescan', {}, function () { $('scan-text').textContent = 'Wird neu eingelesen …'; });
+    };
+    $('reload-log').onclick = loadLog;
+    run('state');
     loadLog();
-    setInterval(function () { api('state').then(render).catch(function () {}); loadLog(); }, 10000);
-  });
+    setInterval(function () { api('state', {}, render, function () {}); loadLog(); }, 10000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.attachEvent ? document.attachEvent('onreadystatechange', function () { if (document.readyState === 'complete') start(); }) : document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
 })();
 `
