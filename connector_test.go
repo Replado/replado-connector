@@ -497,3 +497,23 @@ func TestProtocolRotatesAndReadsNewestFirst(t *testing.T) {
 		t.Fatal("neuester Eintrag fehlt")
 	}
 }
+
+func TestSearchFindsWordsAcrossColumnsAndSpellings(t *testing.T) {
+	row := []interface{}{"Tabak-Börse", "Gräser", "Hauptstraße 5", "Musterstadt", 4711.0}
+	for _, text := range []string{"Tabakbörse Gräser", "tabakboerse graeser", "Gräser", "TABAK börse", "Graeser Musterstadt", "hauptstrasse"} {
+		if !rowMatches(row, searchWords(text)) {
+			t.Errorf("%q nicht gefunden", text)
+		}
+	}
+	for _, text := range []string{"Tabakbörse Meier", "4711", "Gräserstraße"} {
+		if rowMatches(row, searchWords(text)) {
+			t.Errorf("%q fälschlich gefunden", text)
+		}
+	}
+	if !rowMatches([]interface{}{"info@tabak-graeser.de"}, searchWords("info@tabak-graeser.de")) {
+		t.Error("Mailadresse nicht gefunden")
+	}
+	if len(searchWords("  - , ")) != 0 {
+		t.Error("Satzzeichen allein sind kein Suchtext")
+	}
+}

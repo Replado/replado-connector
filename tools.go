@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 type ToolDef struct {
@@ -21,7 +22,7 @@ var toolDefs = []ToolDef{
 		json.RawMessage(`{"type":"object","required":["source","table"],"properties":{"source":{"type":"string"},"table":{"type":"string"},"sample":{"type":"integer","description":"Anzahl Beispielzeilen, Standard 5"}}}`)},
 	{"query", "Liest Zeilen aus einer Tabelle mit Filtern, Sortierung und Limit. Operatoren: eq, ne, contains, gt, gte, lt, lte. Datumswerte als JJJJ-MM-TT.",
 		json.RawMessage(`{"type":"object","required":["source","table"],"properties":{"source":{"type":"string"},"table":{"type":"string"},"where":{"type":"array","items":{"type":"object","required":["field","op","value"],"properties":{"field":{"type":"string"},"op":{"type":"string","enum":["eq","ne","contains","gt","gte","lt","lte"]},"value":{}}}},"order_by":{"type":"string"},"desc":{"type":"boolean"},"fields":{"type":"array","items":{"type":"string"}},"limit":{"type":"integer","description":"max. 200, Standard 50"}}}`)},
-	{"search", "Volltextsuche (Teilstring, ohne Groß/Klein) über alle Textspalten einer Quelle oder einer Tabelle. Gut, um z.B. einen Kunden anhand von Name, Ort oder E-Mail zu finden.",
+	{"search", "Volltextsuche über alle Textspalten einer Quelle oder einer Tabelle. Jedes Wort des Suchtexts muss irgendwo in der Zeile vorkommen, auch verteilt auf mehrere Spalten; Groß/Klein, Umlaute (ö = oe, ß = ss), Bindestriche und Leerzeichen spielen keine Rolle. Gut, um z.B. einen Kunden anhand von Firma, Name, Ort oder E-Mail zu finden.",
 		json.RawMessage(`{"type":"object","required":["source","text"],"properties":{"source":{"type":"string"},"text":{"type":"string"},"table":{"type":"string"},"limit":{"type":"integer","description":"max. Treffer, Standard 20"}}}`)},
 }
 
@@ -136,8 +137,8 @@ func callTool(name string, raw json.RawMessage) (interface{}, error) {
 		if s == nil {
 			return nil, errf("Quelle %q unbekannt, erst list_sources aufrufen", a.Source)
 		}
-		q := strings.ToLower(strings.TrimSpace(a.Text))
-		if q == "" {
+		words := searchWords(a.Text)
+		if len(words) == 0 {
 			return nil, errf("Suchtext fehlt")
 		}
 		lim := clampLimit(a.Limit, 20, 100)
@@ -154,11 +155,8 @@ func callTool(name string, raw json.RawMessage) (interface{}, error) {
 				continue
 			}
 			for _, r := range t.Rows {
-				for _, v := range r {
-					if sv, ok := v.(string); ok && strings.Contains(strings.ToLower(sv), q) {
-						out = append(out, map[string]interface{}{"table": t.Name, "row": t.RowMap(r, nil)})
-						break
-					}
+				if rowMatches(r, words) {
+					out = append(out, map[string]interface{}{"table": t.Name, "row": t.RowMap(r, nil)})
 				}
 				if len(out) >= lim {
 					break
@@ -168,6 +166,45 @@ func callTool(name string, raw json.RawMessage) (interface{}, error) {
 		return map[string]interface{}{"hits": out}, nil
 	}
 	return nil, errf("unbekanntes Werkzeug %q", name)
+}
+
+var umlauts = strings.NewReplacer("ä", "ae", "ö", "oe", "ü", "ue", "ß", "ss")
+
+func normalized(s string) string {
+	s = umlauts.Replace(strings.ToLower(s))
+	return strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			return r
+		}
+		return -1
+	}, s)
+}
+
+func searchWords(text string) []string {
+	var out []string
+	for _, w := range strings.Fields(text) {
+		if n := normalized(w); n != "" {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+func rowMatches(r []interface{}, words []string) bool {
+	var b strings.Builder
+	for _, v := range r {
+		if sv, ok := v.(string); ok {
+			b.WriteString(normalized(sv))
+			b.WriteByte(' ')
+		}
+	}
+	text := b.String()
+	for _, w := range words {
+		if !strings.Contains(text, w) {
+			return false
+		}
+	}
+	return true
 }
 
 func openTable(src, table string) (*Table, error) {
