@@ -24,6 +24,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -368,10 +369,24 @@ func checkForUpdate() {
 	restartAfter(installedTarget())
 }
 
+var (
+	updateRunning  int32
+	runUpdateCheck = checkForUpdate
+)
+
+func checkForUpdateOnce() bool {
+	if !atomic.CompareAndSwapInt32(&updateRunning, 0, 1) {
+		return false
+	}
+	defer atomic.StoreInt32(&updateRunning, 0)
+	runUpdateCheck()
+	return true
+}
+
 func updateLoop() {
 	updateSleep(updateFirstCheck)
 	for {
-		checkForUpdate()
+		checkForUpdateOnce()
 		updateSleep(updateEvery)
 	}
 }

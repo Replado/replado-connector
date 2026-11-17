@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -319,6 +320,7 @@ type fakeReplado struct {
 	calls   []call
 	removed bool
 	rescan  bool
+	update  bool
 }
 
 func (f *fakeReplado) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -349,8 +351,8 @@ func (f *fakeReplado) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		f.polls = append(f.polls, body)
-		json.NewEncoder(w).Encode(map[string]interface{}{"calls": f.calls, "rescan": f.rescan})
-		f.calls, f.rescan = nil, false
+		json.NewEncoder(w).Encode(map[string]interface{}{"calls": f.calls, "rescan": f.rescan, "update": f.update})
+		f.calls, f.rescan, f.update = nil, false, false
 	case "/api/connector/v1/result":
 		if !authorized {
 			w.WriteHeader(401)
@@ -515,5 +517,45 @@ func TestSearchFindsWordsAcrossColumnsAndSpellings(t *testing.T) {
 	}
 	if len(searchWords("  - , ")) != 0 {
 		t.Error("Satzzeichen allein sind kein Suchtext")
+	}
+}
+
+func TestUpdateHintFromRepladoStartsOneCheck(t *testing.T) {
+	defer useAppDir(t)()
+	fake := &fakeReplado{secret: "lc_geheim", update: true}
+	srv := httptest.NewServer(fake)
+	defer srv.Close()
+	started := make(chan struct{}, 4)
+	release := make(chan struct{})
+	old := runUpdateCheck
+	runUpdateCheck = func() {
+		started <- struct{}{}
+		<-release
+	}
+	defer func() { runUpdateCheck = old }()
+	cl := httpClient(5 * time.Second)
+	c := &Config{Server: srv.URL, Secret: "lc_geheim"}
+	if err := pollOnce(cl, cl, c, &scanner{}); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-started:
+	case <-time.After(3 * time.Second):
+		t.Fatal("Hinweis von Replado hat keine Update-Prüfung gestartet")
+	}
+	if checkForUpdateOnce() {
+		t.Fatal("zweite Prüfung lief trotz laufender Prüfung")
+	}
+	close(release)
+	for i := 0; i < 100 && atomic.LoadInt32(&updateRunning) != 0; i++ {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if err := pollOnce(cl, cl, c, &scanner{}); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-started:
+		t.Fatal("ohne Hinweis wurde geprüft")
+	case <-time.After(200 * time.Millisecond):
 	}
 }

@@ -316,6 +316,7 @@ type pollAnswer struct {
 	Calls  []call  `json:"calls"`
 	Known  []Known `json:"known"`
 	Rescan bool    `json:"rescan"`
+	Update bool    `json:"update"`
 }
 
 type scanner struct {
@@ -404,6 +405,9 @@ func pollOnce(long, short *http.Client, c *Config, s *scanner) error {
 	if r.Rescan {
 		s.ensure(c, true)
 		s.reported = ""
+	}
+	if r.Update {
+		go checkForUpdateOnce()
 	}
 	var wg sync.WaitGroup
 	for _, cl := range r.Calls {
