@@ -219,6 +219,7 @@ func (u *uiServer) state() map[string]interface{} {
 	return map[string]interface{}{
 		"version":      running,
 		"outdated":     running != version,
+		"downloaded":   !installedHere(),
 		"os":           osVersion(),
 		"server":       c.Server,
 		"account":      c.Account,

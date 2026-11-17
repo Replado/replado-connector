@@ -22,6 +22,7 @@ const uiHTML = `<!doctype html>
     <div id="connected" hidden>
       <p id="connected-text"></p>
       <p id="contact" class="muted"></p>
+      <p id="installed" class="notice" role="status" hidden>Der Replado Connector ist jetzt auf diesem Rechner installiert und startet automatisch mit. Die heruntergeladene Datei wird nicht mehr gebraucht und kann gelöscht werden.</p>
       <button type="button" id="logout" class="secondary">Abmelden</button>
     </div>
     <form id="login" hidden>
@@ -204,6 +205,7 @@ const uiJS = `(function () {
     show($('outdated'), !!s.outdated);
     show($('connected'), s.connected);
     show($('login'), !s.connected);
+    show($('installed'), s.connected && s.downloaded);
     if (s.connected) {
       $('connected-text').textContent = 'Verbunden mit ' + s.server + ' als ' + s.account + '.';
       var st = s.status || {};

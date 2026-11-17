@@ -310,3 +310,18 @@ func TestSettingsShowTheVersionOfTheUpdatedService(t *testing.T) {
 		t.Fatalf("älterer Dienst: %v %v", s["version"], s["outdated"])
 	}
 }
+
+func TestSettingsSayTheDownloadIsNoLongerNeeded(t *testing.T) {
+	defer useAppDir(t)()
+	u := &uiServer{}
+	if u.state()["downloaded"] != true {
+		t.Fatal("Programm außerhalb des Installationsordners muss als Download gelten")
+	}
+	old := installedTarget
+	defer func() { installedTarget = old }()
+	self, _ := os.Executable()
+	installedTarget = func() string { return self }
+	if u.state()["downloaded"] != false {
+		t.Fatal("installierte Kopie darf nicht als Download gelten")
+	}
+}
