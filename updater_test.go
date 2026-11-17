@@ -294,3 +294,19 @@ func TestVersionCommandPrintsTheVersion(t *testing.T) {
 		t.Fatalf("%q %v", out.String(), err)
 	}
 }
+
+func TestSettingsShowTheVersionOfTheUpdatedService(t *testing.T) {
+	defer useAppDir(t)()
+	u := &uiServer{}
+	if s := u.state(); s["version"] != version || s["outdated"] != false {
+		t.Fatalf("ohne Dienst: %v %v", s["version"], s["outdated"])
+	}
+	ioutil.WriteFile(statusPath(), []byte(`{"version":"99.0.0"}`), 0600)
+	if s := u.state(); s["version"] != "99.0.0" || s["outdated"] != true {
+		t.Fatalf("neuerer Dienst: %v %v", s["version"], s["outdated"])
+	}
+	ioutil.WriteFile(statusPath(), []byte(`{"version":"0.0.1"}`), 0600)
+	if s := u.state(); s["version"] != version || s["outdated"] != false {
+		t.Fatalf("älterer Dienst: %v %v", s["version"], s["outdated"])
+	}
+}

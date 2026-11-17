@@ -15,6 +15,7 @@ const uiHTML = `<!doctype html>
   <p id="about" class="muted"></p>
 </header>
 <main>
+  <div id="outdated" class="notice" role="status" hidden></div>
   <div id="error" class="alert" role="alert" hidden></div>
   <section class="card" aria-labelledby="h-connection">
     <h2 id="h-connection">1. Mit Replado verbinden</h2>
@@ -112,6 +113,7 @@ button[disabled] { opacity: 0.5; cursor: default; }
 .confirm input { position: absolute; left: 12px; top: 14px; width: 22px; height: 22px; margin: 0; }
 .alert { background: #fbeceb; color: #a3271f; padding: 12px 16px; border-radius: 8px; margin-top: 16px; }
 .ok { color: #1f5c46; font-weight: bold; }
+.notice { background: #e6f2ec; color: #1f5c46; padding: 12px 16px; border-radius: 8px; margin-top: 16px; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #dfe3dc; vertical-align: top; }
@@ -127,6 +129,7 @@ th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #dfe3dc; v
   .confirm { background: #141815; }
   .alert { background: #3a1f1d; color: #f19189; }
   .ok { color: #5fb38f; }
+  .notice { background: #1d3229; color: #8fd3b4; }
 }
 `
 
@@ -197,6 +200,8 @@ const uiJS = `(function () {
   function render(s) {
     state = s;
     $('about').textContent = 'Version ' + s.version + ' · ' + s.os;
+    $('outdated').textContent = s.outdated ? 'Der Replado Connector wurde auf Version ' + s.version + ' aktualisiert. Bitte diese Seite schließen und die Einstellungen über das Symbol neben der Uhr neu öffnen.' : '';
+    show($('outdated'), !!s.outdated);
     show($('connected'), s.connected);
     show($('login'), !s.connected);
     if (s.connected) {

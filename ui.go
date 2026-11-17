@@ -211,14 +211,20 @@ func (u *uiServer) state() map[string]interface{} {
 	if folders == nil {
 		folders = []Folder{}
 	}
+	st := readStatus()
+	running := version
+	if newerVersion(st.Version, version) {
+		running = st.Version
+	}
 	return map[string]interface{}{
-		"version":      version,
+		"version":      running,
+		"outdated":     running != version,
 		"os":           osVersion(),
 		"server":       c.Server,
 		"account":      c.Account,
 		"connected":    c.Secret != "",
 		"folders":      folders,
-		"status":       readStatus(),
+		"status":       st,
 		"rescan_at":    c.RescanAt,
 		"confirmation": confirmationText,
 	}
