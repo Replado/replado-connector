@@ -131,6 +131,8 @@ type uiRequest struct {
 	Code      string `json:"code"`
 	Path      string `json:"path"`
 	Confirmed bool   `json:"confirmed"`
+	Filter    string `json:"filter"`
+	Limit     int    `json:"limit"`
 }
 
 func (u *uiServer) handle(action string, body []byte) (interface{}, error) {
@@ -200,7 +202,12 @@ func (u *uiServer) handle(action string, body []byte) (interface{}, error) {
 		}
 		return u.state(), nil
 	case "log":
-		return readProtocol(200), nil
+		limit := req.Limit
+		if limit <= 0 || limit > 1000 {
+			limit = 25
+		}
+		entries, more := readProtocolPage(req.Filter, limit)
+		return map[string]interface{}{"entries": entries, "more": more}, nil
 	}
 	return nil, errf("Unbekannte Aktion")
 }

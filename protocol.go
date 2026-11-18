@@ -48,6 +48,36 @@ func record(e Entry) {
 	f.Write(append(b, '\n'))
 }
 
+var setupKinds = map[string]bool{"ordner": true, "anmeldung": true, "abmeldung": true, "update": true, "einlesen": true}
+
+func protocolFilter(name string) func(Entry) bool {
+	switch name {
+	case "abfragen":
+		return func(e Entry) bool { return e.Kind == "abfrage" && e.Error == "" }
+	case "fehler":
+		return func(e Entry) bool { return e.Error != "" }
+	case "einrichtung":
+		return func(e Entry) bool { return setupKinds[e.Kind] && e.Error == "" }
+	}
+	return func(Entry) bool { return true }
+}
+
+func readProtocolPage(filter string, limit int) ([]Entry, bool) {
+	keep := protocolFilter(filter)
+	all := readProtocol(-1)
+	out := []Entry{}
+	for _, e := range all {
+		if !keep(e) {
+			continue
+		}
+		if len(out) == limit {
+			return out, true
+		}
+		out = append(out, e)
+	}
+	return out, false
+}
+
 func readProtocol(limit int) []Entry {
 	protocolMu.Lock()
 	defer protocolMu.Unlock()
@@ -68,7 +98,7 @@ func readProtocol(limit int) []Entry {
 		f.Close()
 	}
 	out := []Entry{}
-	for i := len(all) - 1; i >= 0 && len(out) < limit; i-- {
+	for i := len(all) - 1; i >= 0 && (limit < 0 || len(out) < limit); i-- {
 		out = append(out, all[i])
 	}
 	return out
