@@ -44,7 +44,7 @@ const (
 )
 
 var (
-	updateBase      = "https://github.com/marcelglaeser/replado-connector/releases/latest/download/"
+	updateBase      = "https://github.com/Replado/replado-connector/releases/latest/download/"
 	updateHosts     = []string{"github.com", ".githubusercontent.com"}
 	updateKey       = mustUpdateKey(updatePublicKeyPEM)
 	updateClient    = newUpdateClient
